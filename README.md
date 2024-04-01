@@ -22,7 +22,10 @@ Nifty and Bank Nifty indices have significant overlap in terms of their constitu
 
 1. Data Preprocessing: The wrong tte values are corrected using the mode of that dady, Nan values are filled using ffil() and the data is cleaned for post market and holidays.
 2. Since the data for some months (Dec-Jan) is missing, we will be assuming a continuous time series from November to January.
-3. Pnl in a Trade = P/L(Exit) - P/L(Entry) for long trade, vice versa for short trade.
+3. Pnl of a Trade = P/L(Exit) - P/L(Entry) for long trade, vice versa for short trade.
+4. Since the calculation of returns in unclear due to absence of initial amount or expense of trade, the shape is calculated as the (mean(pnl) - risk free)/std_dev(pnl)
+5. The drawdown is calculated with respected to the cummax() of the pnl.
+                                                  
 
 
 # Z Score MODEL
@@ -61,6 +64,39 @@ The Z-score crosses back over more moderate thresholds (pos_threshold for short 
 
 - Loop and Trade Management: The script meticulously manages the state of being in a trade, waiting for an entry signal, or having placed a limit order. It updates trade entries and exits based on the evolving conditions and logs each trade's details for retrospective analysis.
 
+# Z Score with Bollinger Bands Mean reversal MODEL
+- Bollinger Bands: Bollinger Bands are calculated based on the z-score rather than the raw price or spread data. This involves calculating the middle band (the rolling mean of the z-score), the standard deviation of the z-score, and then the upper and lower bands by adding/subtracting the standard deviation (scaled by a multiplier) from the middle band.
+### Entry Logic
+
+The strategy looks for specific conditions to enter a trade, focusing on the relationship between the previous and current z-scores (iv_spread) and the Bollinger Bands:
+
+- Long Entry Condition: A long position is entered when the previous z-score is below the lower band, and the current z-score has risen above the lower band. This signals that the spread is moving back towards the mean, potentially indicating an uptrend.
+- Short Entry Condition: A short position is initiated when the previous z-score is above the upper band, and the current z-score has dropped below the upper band. This indicates the spread is reverting back towards the mean from an overextended position, potentially signaling a downtrend.
+
+### Exit Logic
+
+Positions are exited based on the relationship between the current z-score and the Bollinger Bands or if a maximum number of bars (time periods) have been reached:
+
+- Long Exit Condition: A long position is exited when the current z-score rises above the upper band, suggesting the spread might be overextending upwards.
+- Short Exit Condition: A short position is exited when the current z-score falls below the lower band, indicating the spread might be overextending downwards.
+- Additionally, positions are automatically exited after a predefined number of bars, regardless of the z-score's position relative to the Bollinger Bands, to limit exposure.
+
+### Bollinger Bands vs Traditional Z Score
+Adaptability to Volatility
+
+- Dynamic Widths: Bollinger Bands automatically widen during periods of high volatility and contract during periods of low volatility. This dynamic adjustment provides a more nuanced view of the market's volatility, enabling traders to adjust their strategies in real-time. In contrast, conventional scoring strategies that use static thresholds might not adapt as quickly to changes in market conditions.
+
+Visual Trend Indicators
+
+- Clear Trend Indications: Bollinger Bands can provide visual cues about the trend direction and momentum. For instance, a price consistently touching or exceeding the upper band might indicate a strong uptrend, whereas prices lingering near the lower band might signal a downtrend. This visual simplicity can aid traders in making quicker decisions.
+
+Overbought/Oversold Conditions
+
+- Identification of Extremes: Bollinger Bands can help identify overbought or oversold conditions. Prices near the upper band may indicate that an asset is overbought, while prices near the lower band may suggest it's oversold. This can be especially useful in spotting potential reversal points. Conventional scoring strategies may not directly relate these conditions to the current price context.
+
+Complementary to Other Strategies
+
+- Integration with Other Indicators: Bollinger Bands can be easily combined with other technical indicators and trading strategies to confirm signals or generate more robust trading setups. This versatility makes them a valuable tool in the trader's toolkit.
 
 
 ## Glossary
